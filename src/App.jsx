@@ -17,8 +17,8 @@ const App = () => {
   const [objs, setObjs] = useState(null)
 
   const options = {
-    height: 600,
-    width: 800,
+    width: 5000,
+    height: 7500,
     // fireRightClick: true,
     // fireMiddleClick: true,
     stopContextMenu: true,
@@ -34,8 +34,16 @@ const App = () => {
     // make the fabric.Canvas instance available to your app
     // updateCanvasContext(canvas);
     canvasContext.canvas = canvas
-
-
+    const canvasNode = document.getElementById('canvas')
+    // canvasDocument.wid
+    canvasNode.style.width = "500px"
+    canvasNode.style.height = "750px"
+    const parentNode = canvasNode.parentNode
+    parentNode.style.width = "500px"
+    parentNode.style.height = "750px"
+    const brotherNode = canvasNode.nextSibling
+    brotherNode.style.width = "500px"
+    brotherNode.style.height = "750px"
 
     return () => {
       console.log("destroy")
@@ -57,7 +65,7 @@ const App = () => {
 
   const click = () => {
     fabric.Image.fromURL(LZQ, (oImg) => {
-      oImg.scale(0.05);
+      // oImg.scale(0.05);
       canvasContext.canvas.add(oImg);
     });
   }
@@ -69,10 +77,10 @@ const App = () => {
   }
 
   const upload = (prop) => {
-    console.log(prop.target.files)
+    console.log(prop)
     const objectURL = URL.createObjectURL(prop.target.files[0]);
     fabric.Image.fromURL(objectURL, (oImg) => {
-      oImg.scale(0.05);
+      // oImg.scale(0.05);
       canvasContext.canvas.add(oImg);
       console.log(canvasContext.canvas.getObjects())
       setObjs(()=>{return canvasContext.canvas.getObjects()})
@@ -106,7 +114,7 @@ const App = () => {
   }
 
   const upload_overlay = (prop) => {
-    console.log(prop.target.files)
+    // console.log(prop.target.files)
     const objectURL = URL.createObjectURL(prop.target.files[0]);
     canvasContext.canvas.setOverlayImage(objectURL, canvasContext.canvas.renderAll.bind(canvasContext.canvas),{scaleX: 0.05, scaleY:0.05});
     canvasContext.canvas.renderAll();
@@ -186,21 +194,22 @@ const App = () => {
     if (canvasContext.canvas) {
       console.log('on')
       canvasContext.canvas.on({
-        'mouse:wheel': opt => {
-          const delta = opt.e.deltaY > 0 ? 100 : -100 // 读取滚轮操作
-          let zoom = canvasContext.canvas.getZoom()
-          zoom *= 0.999 ** delta
-          zoom = zoom < 20 ? zoom : 20;
-          zoom = zoom > 0.01 ? zoom : 0.01;
-
-          canvasContext.canvas.zoomToPoint(
-            {
-              x: opt.e.offsetX,
-              y: opt.e.offsetY
-            },
-            zoom
-          )
-        },
+        // 滚轮放大缩小
+        // 'mouse:wheel': opt => {
+        //   const delta = opt.e.deltaY > 0 ? 100 : -100 // 读取滚轮操作
+        //   let zoom = canvasContext.canvas.getZoom()
+        //   zoom *= 0.999 ** delta
+        //   zoom = zoom < 20 ? zoom : 20;
+        //   zoom = zoom > 0.01 ? zoom : 0.01;
+        //
+        //   canvasContext.canvas.zoomToPoint(
+        //     {
+        //       x: opt.e.offsetX,
+        //       y: opt.e.offsetY
+        //     },
+        //     zoom
+        //   )
+        // },
         'mouse:down': opt => {
           // this.panning = true;
           mouseDown = true
@@ -209,7 +218,7 @@ const App = () => {
           mouseDown = false
         },
         'mouse:move': opt => {
-          console.log(canvasContext.panning,111);
+          // console.log(canvasContext.panning,111);
           if (canvasContext.panning && mouseDown && opt && opt.e) {
             canvasContext.canvas.discardActiveObject();
             const delta = new fabric.Point(opt.e.movementX, opt.e.movementY);
@@ -222,7 +231,7 @@ const App = () => {
   }, [])
 
   const zoom = (delta) => {
-    canvasContext.canvas.setZoom(delta)
+    // canvasContext.canvas.setZoom(delta)
   }
 
   const pan = () => {
@@ -281,6 +290,23 @@ const App = () => {
     }
   }
 
+  const save = (e) => {
+    const url = canvasContext.canvas.toDataURL({
+      format: "jpeg",
+      quality: 1
+    })
+    // e.download(url);
+    // console.log(url)
+    // this.download(url)
+
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `image.jpg`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
   return (
     <>
       <div>
@@ -293,7 +319,7 @@ const App = () => {
         </div>
         <h1>{num}</h1>
         <button id="btnNum" onClick={()=>setNum(num + 1)}>点击</button>
-        <canvas id="canvas" ref={canvasEl}/>
+        <canvas id="canvas" ref={canvasEl} style={{width: 1500, height: 1500}} />
       {/*<canvas id="canvas"/>*/}
         <button id="btn1" onClick={click}>点击</button>
         <button id="btn2" onClick={span}>旋转</button>
@@ -313,6 +339,9 @@ const App = () => {
         <button id="btn-pan" onClick={group}>合并对象</button>
         <button id="btn-pan" onClick={ungroup}>拆开对象</button>
         <button id="btna" onClick={()=>{console.log(objs)}}>log</button>
+      </div>
+      <div>
+        <button id="btn-save" onClick={save}>导出图片</button>
       </div>
     </>
   )
