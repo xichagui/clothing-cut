@@ -17,12 +17,12 @@ const App = () => {
   const [objs, setObjs] = useState(null)
 
   const options = {
-    width: 5000,
-    height: 7500,
+    width: 500,
+    height: 500,
     // fireRightClick: true,
     // fireMiddleClick: true,
     stopContextMenu: true,
-    // backgroundColor: 'pink',
+    backgroundColor: '#eeeeee',
     // backgroundImage: undefined,
   };
 
@@ -34,16 +34,6 @@ const App = () => {
     // make the fabric.Canvas instance available to your app
     // updateCanvasContext(canvas);
     canvasContext.canvas = canvas
-    const canvasNode = document.getElementById('canvas')
-    // canvasDocument.wid
-    canvasNode.style.width = "500px"
-    canvasNode.style.height = "750px"
-    const parentNode = canvasNode.parentNode
-    parentNode.style.width = "500px"
-    parentNode.style.height = "750px"
-    const brotherNode = canvasNode.nextSibling
-    brotherNode.style.width = "500px"
-    brotherNode.style.height = "750px"
 
     return () => {
       console.log("destroy")
@@ -79,6 +69,12 @@ const App = () => {
   const upload = (prop) => {
     console.log(prop)
     const objectURL = URL.createObjectURL(prop.target.files[0]);
+    const img = new Image();
+    img.src = objectURL;
+    img.onload = () => {
+      console.log(img.width, img.height)
+    }
+
     fabric.Image.fromURL(objectURL, (oImg) => {
       // oImg.scale(0.05);
       canvasContext.canvas.add(oImg);
@@ -87,7 +83,6 @@ const App = () => {
     });
 
     prop.target.value = '';
-
   }
 
   const z_index_change = (option) => {
@@ -195,21 +190,21 @@ const App = () => {
       console.log('on')
       canvasContext.canvas.on({
         // 滚轮放大缩小
-        // 'mouse:wheel': opt => {
-        //   const delta = opt.e.deltaY > 0 ? 100 : -100 // 读取滚轮操作
-        //   let zoom = canvasContext.canvas.getZoom()
-        //   zoom *= 0.999 ** delta
-        //   zoom = zoom < 20 ? zoom : 20;
-        //   zoom = zoom > 0.01 ? zoom : 0.01;
-        //
-        //   canvasContext.canvas.zoomToPoint(
-        //     {
-        //       x: opt.e.offsetX,
-        //       y: opt.e.offsetY
-        //     },
-        //     zoom
-        //   )
-        // },
+        'mouse:wheel': opt => {
+          const delta = opt.e.deltaY > 0 ? 100 : -100 // 读取滚轮操作
+          let zoom = canvasContext.canvas.getZoom()
+          zoom *= 0.999 ** delta
+          zoom = zoom < 20 ? zoom : 20;
+          zoom = zoom > 0.01 ? zoom : 0.01;
+
+          canvasContext.canvas.zoomToPoint(
+            {
+              x: opt.e.offsetX,
+              y: opt.e.offsetY
+            },
+            zoom
+          )
+        },
         'mouse:down': opt => {
           // this.panning = true;
           mouseDown = true
@@ -307,6 +302,37 @@ const App = () => {
     document.body.removeChild(a)
   }
 
+  const newCanvasFromUpload = (prop) => {
+    console.log(prop)
+    const objectURL = URL.createObjectURL(prop.target.files[0]);
+    const img = new Image();
+    img.src = objectURL;
+    img.onload = () => {
+      console.log(img.width, img.height)
+      canvasContext.canvas.setWidth(img.width)
+      canvasContext.canvas.setHeight(img.height)
+      const zoomWidth = (img.width/10).toString(), zoomHeight = (img.height/10).toString()
+      const canvasNode = document.getElementById('canvas')
+      canvasNode.style.width = zoomWidth + "px"
+      canvasNode.style.height = zoomHeight+ "px"
+      const parentNode = canvasNode.parentNode
+      parentNode.style.width = zoomWidth + "px"
+      parentNode.style.height = zoomHeight+ "px"
+      const brotherNode = canvasNode.nextSibling
+      brotherNode.style.width = zoomWidth + "px"
+      brotherNode.style.height = zoomHeight+ "px"
+
+      const bg = new fabric.Rect({ width: img.width, height: img.height, fill: 'white', evented: false, selectable: false });
+      bg.canvas = canvasContext.canvas;
+      canvasContext.canvas.backgroundImage = bg;
+      canvasContext.canvas.renderAll()
+    }
+
+    canvasContext.canvas.setOverlayImage(objectURL, canvasContext.canvas.renderAll.bind(canvasContext.canvas));
+    canvasContext.canvas.renderAll();
+    prop.target.value = '';
+  }
+
   return (
     <>
       <div>
@@ -342,6 +368,9 @@ const App = () => {
       </div>
       <div>
         <button id="btn-save" onClick={save}>导出图片</button>
+      </div>
+      <div>
+        <input type="file" id="uploadCanvas" onChange={newCanvasFromUpload}/>
       </div>
     </>
   )
