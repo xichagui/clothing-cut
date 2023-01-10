@@ -68,7 +68,50 @@ const App = () => {
 
   const upload = (prop) => {
     console.log(prop)
+    const filePath = prop.target.value
+    const fileName = prop.target.files[0].name
+    const file = prop.target.files[0]
+    const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+
+    if (window.FileReader) {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = (e) => {
+        const base64String = e.target.result
+        // console.log(base64String)
+        fabric.Image.fromURL(base64String, (oImg) => {
+            oImg.scale(0.1);
+            canvasContext.canvas.add(oImg);
+            console.log(canvasContext.canvas.getObjects())
+            setObjs(()=>{return canvasContext.canvas.getObjects()})
+          });
+      }
+    }
+
+    // const objectURL = URL.createObjectURL(prop.target.files[0]);
+    // // const img = new Image();
+    // // img.src = objectURL;
+    // // img.onload = () => {
+    // //   console.log(img.width, img.height)
+    // // }
+    //
+    // fabric.Image.fromURL(objectURL, (oImg) => {
+    //   oImg.scale(0.1);
+    //   canvasContext.canvas.add(oImg);
+    //   console.log(canvasContext.canvas.getObjects())
+    //   setObjs(()=>{return canvasContext.canvas.getObjects()})
+    // });
+
+    prop.target.value = '';
+  }
+
+  const upload2 = (prop) => {
+    console.log(prop)
     const objectURL = URL.createObjectURL(prop.target.files[0]);
+
+    const reader = new FileReader();
+    // reader.onload
+
     const img = new Image();
     img.src = objectURL;
     img.onload = () => {
@@ -309,28 +352,40 @@ const App = () => {
     img.src = objectURL;
     img.onload = () => {
       console.log(img.width, img.height)
-      canvasContext.canvas.setWidth(img.width)
-      canvasContext.canvas.setHeight(img.height)
-      const zoomWidth = (img.width/10).toString(), zoomHeight = (img.height/10).toString()
-      const canvasNode = document.getElementById('canvas')
-      canvasNode.style.width = zoomWidth + "px"
-      canvasNode.style.height = zoomHeight+ "px"
-      const parentNode = canvasNode.parentNode
-      parentNode.style.width = zoomWidth + "px"
-      parentNode.style.height = zoomHeight+ "px"
-      const brotherNode = canvasNode.nextSibling
-      brotherNode.style.width = zoomWidth + "px"
-      brotherNode.style.height = zoomHeight+ "px"
+      canvasContext.canvas.setWidth(img.width/10)
+      canvasContext.canvas.setHeight(img.height/10)
+      // const zoomWidth = (img.width/10).toString(), zoomHeight = (img.height/10).toString()
+      // const canvasNode = document.getElementById('canvas')
+      // canvasNode.style.width = zoomWidth + "px"
+      // canvasNode.style.height = zoomHeight+ "px"
+      // const parentNode = canvasNode.parentNode
+      // parentNode.style.width = zoomWidth + "px"
+      // parentNode.style.height = zoomHeight+ "px"
+      // const brotherNode = canvasNode.nextSibling
+      // brotherNode.style.width = zoomWidth + "px"
+      // brotherNode.style.height = zoomHeight+ "px"
 
-      const bg = new fabric.Rect({ width: img.width, height: img.height, fill: 'white', evented: false, selectable: false });
+      const bg = new fabric.Rect({ width: img.width/10, height: img.height/10, fill: 'white', evented: false, selectable: false });
       bg.canvas = canvasContext.canvas;
       canvasContext.canvas.backgroundImage = bg;
       canvasContext.canvas.renderAll()
     }
 
-    canvasContext.canvas.setOverlayImage(objectURL, canvasContext.canvas.renderAll.bind(canvasContext.canvas));
+    canvasContext.canvas.setOverlayImage(objectURL, canvasContext.canvas.renderAll.bind(canvasContext.canvas), {scaleX: 0.1, scaleY:0.1});
     canvasContext.canvas.renderAll();
     prop.target.value = '';
+  }
+
+  const toJSON = () => {
+    console.log(JSON.stringify(canvasContext.canvas.toJSON()))
+  }
+
+  const rePos = () => {
+    canvasContext.canvas.setZoom(1)
+
+    canvasContext.canvas.discardActiveObject();
+    const delta = new fabric.Point(0, 0);
+    canvasContext.canvas.relativePan(delta)
   }
 
   return (
@@ -368,9 +423,12 @@ const App = () => {
       </div>
       <div>
         <button id="btn-save" onClick={save}>导出图片</button>
+        <button id="btn-save" onClick={toJSON}>JSON</button>
       </div>
       <div>
         <input type="file" id="uploadCanvas" onChange={newCanvasFromUpload}/>
+        {/*<input type="file" id="upload" onChange={upload}/>*/}
+        <button id="repos" onClick={rePos}>位置复原</button>
       </div>
     </>
   )
