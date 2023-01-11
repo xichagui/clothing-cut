@@ -8,10 +8,12 @@ import { fabric } from 'fabric';
 
 // const CanvasContext = createContext(null);
 // const { canvas, canvasEl } = CanvasContext
-const canvasContext = {'canvas': null, 'panning': false }
+const canvasContext = {'canvas': null, 'panning': false, 'canvas2': null, 'json': null }
 
+fabric.Object.NUM_FRACTION_DIGITS = 100
 const App = () => {
   const canvasEl = useRef(null);
+  const canvasEl2 = useRef(null);
   // const { canvas1 } = useContext(CanvasContext)
   const [objLst, setObjList] = useState([])
   const [objs, setObjs] = useState(null)
@@ -31,9 +33,11 @@ const App = () => {
     // const canvas = new fabric.Canvas('canvas', options);
     // setCanvas(new fabric.Canvas('canvas', options));
     const canvas = new fabric.Canvas(canvasEl.current, options);
+    const canvas2 = new fabric.Canvas(canvasEl2.current, options);
     // make the fabric.Canvas instance available to your app
     // updateCanvasContext(canvas);
     canvasContext.canvas = canvas
+    canvasContext.canvas2 = canvas2
 
     return () => {
       console.log("destroy")
@@ -42,6 +46,8 @@ const App = () => {
       if(canvas) {
         canvas.dispose();
         canvasContext.canvas = null
+        canvas2.dispose();
+        canvasContext.canvas2 = null
         // setCanvas(null)
         // canvas = null;
       }
@@ -377,15 +383,61 @@ const App = () => {
   }
 
   const toJSON = () => {
-    console.log(JSON.stringify(canvasContext.canvas.toJSON()))
+    // console.log(JSON.stringify(canvasContext.canvas.toJSON(['width', 'height'])))
+    console.log(canvasContext.canvas.toJSON(['width', 'height']))
   }
 
-  const rePos = () => {
-    canvasContext.canvas.setZoom(1)
+  const toJSON2 = () => {
+    // console.log(JSON.stringify(canvasContext.canvas.toJSON(['width', 'height'])))
+    console.log(canvasContext.canvas2.toJSON(['width', 'height']))
+  }
 
-    canvasContext.canvas.discardActiveObject();
-    const delta = new fabric.Point(0, 0);
-    canvasContext.canvas.relativePan(delta)
+
+  const rePos = () => {
+    // canvasContext.canvas.setZoom(1)
+    //
+    // canvasContext.canvas.discardActiveObject();
+    // const delta = new fabric.Point(0, 0);
+    // canvasContext.canvas.relativePan(delta)
+    canvasContext.canvas.setViewportTransform([1,0,0,1,0,0]);
+  }
+
+  const loadJSON = () => {
+    const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
+    // const canvasJSON = JSON.stringify(canvasObject)
+    canvasTimes(canvasObject)
+    canvasContext.canvas2.loadFromJSON(canvasObject,() => {
+      canvasContext.canvas2.setWidth(canvasObject.width)
+      canvasContext.canvas2.setHeight(canvasObject.height)
+    })
+    canvasContext.canvas2.renderAll()
+    // canvasContext.json = JSON.stringify(canvasContext.canvas.toJSON())
+  }
+
+  const canvasTimes = (canvasObj) => {
+    canvasObj.height = canvasObj.height * 10
+    canvasObj.width = canvasObj.width * 10
+    if (canvasObj.backgroundImage) {
+      canvasObj.backgroundImage.height = canvasObj.backgroundImage.height * 10
+      canvasObj.backgroundImage.width = canvasObj.backgroundImage.width * 10
+    }
+
+    canvasObj.objects.map((item)=>objectTimes(item))
+  }
+
+  const objectTimes = (obj) => {
+    if (obj.type === 'image') {
+      obj.scaleX = obj.scaleX * 10
+      obj.scaleY = obj.scaleY * 10
+      obj.top = obj.top * 10
+      obj.left = obj.left * 10
+    } else if (obj.type === 'group') {
+      obj.width = obj.width * 10
+      obj.height = obj.height * 10
+      obj.top = obj.top * 10
+      obj.left = obj.left * 10
+      obj.objects.map((item)=>objectTimes(item))
+    }
   }
 
   return (
@@ -430,6 +482,9 @@ const App = () => {
         {/*<input type="file" id="upload" onChange={upload}/>*/}
         <button id="repos" onClick={rePos}>位置复原</button>
       </div>
+      <canvas id="canvas2" ref={canvasEl2} />
+      <button id="btn-save" onClick={loadJSON}>读取JSON</button>
+      <button id="btn-save" onClick={toJSON2}>JSON</button>
     </>
   )
 }
