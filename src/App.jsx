@@ -1,21 +1,57 @@
-// import { useState } from 'react'
 import LZQ from './LZQ8002.png'
 import './App.css'
-// import Y2002 from './Y2002.tif'
 import React, {useEffect, useRef, useState, createContext, useContext} from 'react';
 import { fabric } from 'fabric';
 
-
-// const CanvasContext = createContext(null);
-// const { canvas, canvasEl } = CanvasContext
 const canvasContext = {'canvas': null, 'panning': false, 'canvas2': null, 'json': null }
 
 fabric.Object.NUM_FRACTION_DIGITS = 100
+
+const objStyle = {
+  "one": { border: "2px solid black"},
+  "group": { border: "2px solid red", overflow: "hidden"}
+}
+
+const selectObj = (index) => {
+  canvasContext.canvas.discardActiveObject();
+  // const len = canvasContext.canvas.getObjects().length;
+  canvasContext.canvas.setActiveObject(canvasContext.canvas.getObjects()[index]);
+  console.log('selectObj fun');
+  canvasContext.canvas.renderAll();
+}
+
+
+const Lii = (prop) => {
+  const target = prop.target
+  if (target) {
+    return target.map((item,index) => (
+        objectList(item, index)
+    )).reverse()
+  } else {
+    return null
+  }
+
+  // console.log('Lii', prop)
+}
+
+const objectList = (item, index, type="one") => {
+  if (item._originalElement) {
+    return (
+        <div key={index} style={objStyle[type]} onClick={() => selectObj(index)}>
+          <img src={item._originalElement.currentSrc} height={100}/>
+        </div>
+    );
+  }
+  else {
+    if (item._objects) {
+      return objectList(item._objects[0], index, "group");
+    }
+  }
+}
+
 const App = () => {
   const canvasEl = useRef(null);
   const canvasEl2 = useRef(null);
-  // const { canvas1 } = useContext(CanvasContext)
-  const [objLst, setObjList] = useState([])
   const [objs, setObjs] = useState(null)
 
   const options = {
@@ -42,14 +78,11 @@ const App = () => {
     return () => {
       console.log("destroy")
       // 销毁时调用 如初始化一些参数
-      // updateCanvasContext(null);
       if(canvas) {
         canvas.dispose();
         canvasContext.canvas = null
         canvas2.dispose();
         canvasContext.canvas2 = null
-        // setCanvas(null)
-        // canvas = null;
       }
       setObjs(null)
     }
@@ -61,7 +94,7 @@ const App = () => {
 
   const click = () => {
     fabric.Image.fromURL(LZQ, (oImg) => {
-      // oImg.scale(0.05);
+
       canvasContext.canvas.add(oImg);
     });
   }
@@ -74,17 +107,16 @@ const App = () => {
 
   const upload = (prop) => {
     console.log(prop)
-    const filePath = prop.target.value
+    // const filePath = prop.target.value
     const fileName = prop.target.files[0].name
     const file = prop.target.files[0]
-    const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+    // const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
 
     if (window.FileReader) {
       const reader = new FileReader()
       reader.readAsDataURL(file)
       reader.onloadend = (e) => {
         const base64String = e.target.result
-        // console.log(base64String)
         fabric.Image.fromURL(base64String, (oImg) => {
             oImg.scale(0.1);
             canvasContext.canvas.add(oImg);
@@ -93,20 +125,6 @@ const App = () => {
           });
       }
     }
-
-    // const objectURL = URL.createObjectURL(prop.target.files[0]);
-    // // const img = new Image();
-    // // img.src = objectURL;
-    // // img.onload = () => {
-    // //   console.log(img.width, img.height)
-    // // }
-    //
-    // fabric.Image.fromURL(objectURL, (oImg) => {
-    //   oImg.scale(0.1);
-    //   canvasContext.canvas.add(oImg);
-    //   console.log(canvasContext.canvas.getObjects())
-    //   setObjs(()=>{return canvasContext.canvas.getObjects()})
-    // });
 
     prop.target.value = '';
   }
@@ -176,24 +194,6 @@ const App = () => {
     console.log("start")
   }, [num])
 
-
-
-  useEffect(()=> {
-    // setObjs(canvasContext.canvas.getObjects())
-    // console.log(11)
-    console.log('useEffect---')
-    console.log(objs)
-    console.log((canvasContext.canvas.getObjects()))
-    console.log('useEffect---end')
-  }, [objs])
-
-  const selectObj = (index) => {
-    canvasContext.canvas.discardActiveObject();
-    const len = canvasContext.canvas.getObjects().length;
-    canvasContext.canvas.setActiveObject(canvasContext.canvas.getObjects()[len-1-index]);
-    console.log('selectObj fun');
-    canvasContext.canvas.renderAll();
-  }
 
   let _clipboard;
   const copy = () => {
@@ -287,8 +287,6 @@ const App = () => {
     console.log("p", canvasContext.panning, "sel", canvasContext.canvas.selection)
   }
 
-  console.log(canvasContext.canvas)
-
   const group = () => {
     if (!canvasContext.canvas.getActiveObject()) {
       return;
@@ -315,27 +313,12 @@ const App = () => {
     canvasContext.canvas.requestRenderAll();
   }
 
-  const objStyle = {
-    "one": { border: "2px solid black"},
-    "group": { border: "2px solid red", overflow: "hidden"}
-  }
-  const objectList = (item, index, type="one") => {
-    if (item._originalElement) {
-      return (
-        <div key={index} style={objStyle[type]} onClick={() => selectObj(index)}>
-          <img src={item._originalElement.currentSrc} height={100}/>
-        </div>
-      );
-    }
-    else {
-      if (item._objects) {
-        return objectList(item._objects[0], index, "group");
-      }
-    }
-  }
 
-  const save = (e) => {
-    const url = canvasContext.canvas.toDataURL({
+  const save = (hasPattern) => {
+
+    loadJSON(hasPattern)
+
+    const url = canvasContext.canvas2.toDataURL({
       format: "jpeg",
       quality: 1
     })
@@ -356,100 +339,164 @@ const App = () => {
     const objectURL = URL.createObjectURL(prop.target.files[0]);
     const img = new Image();
     img.src = objectURL;
-    img.onload = () => {
-      console.log(img.width, img.height)
-      canvasContext.canvas.setWidth(img.width/10)
-      canvasContext.canvas.setHeight(img.height/10)
-      // const zoomWidth = (img.width/10).toString(), zoomHeight = (img.height/10).toString()
-      // const canvasNode = document.getElementById('canvas')
-      // canvasNode.style.width = zoomWidth + "px"
-      // canvasNode.style.height = zoomHeight+ "px"
-      // const parentNode = canvasNode.parentNode
-      // parentNode.style.width = zoomWidth + "px"
-      // parentNode.style.height = zoomHeight+ "px"
-      // const brotherNode = canvasNode.nextSibling
-      // brotherNode.style.width = zoomWidth + "px"
-      // brotherNode.style.height = zoomHeight+ "px"
 
-      const bg = new fabric.Rect({ width: img.width/10, height: img.height/10, fill: 'white', evented: false, selectable: false });
-      bg.canvas = canvasContext.canvas;
-      canvasContext.canvas.backgroundImage = bg;
-      canvasContext.canvas.renderAll()
+    const filePath = prop.target.value
+    const fileName = prop.target.files[0].name
+    const file = prop.target.files[0]
+    const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+
+    if (window.FileReader) {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = (e) => {
+        const base64String = e.target.result
+        // console.log(base64String)
+        fabric.Image.fromURL(base64String, (oImg) => {
+          // oImg.scale(0.1);
+          // canvasContext.canvas.add(oImg);
+          // console.log(canvasContext.canvas.getObjects())
+          // setObjs(()=>{return canvasContext.canvas.getObjects()})
+
+          canvasContext.canvas.setWidth(oImg.width/10)
+          canvasContext.canvas.setHeight(oImg.height/10)
+
+          const bg = new fabric.Rect({ width: oImg.width/10, height: oImg.height/10, fill: 'white', evented: false, selectable: false });
+          bg.canvas = canvasContext.canvas;
+          canvasContext.canvas.backgroundImage = bg;
+          // canvasContext.canvas.renderAll()
+
+          canvasContext.canvas.setOverlayImage(oImg, canvasContext.canvas.renderAll.bind(canvasContext.canvas), {scaleX: 0.1, scaleY:0.1});
+          canvasContext.canvas.renderAll();
+        });
+      }
     }
 
-    canvasContext.canvas.setOverlayImage(objectURL, canvasContext.canvas.renderAll.bind(canvasContext.canvas), {scaleX: 0.1, scaleY:0.1});
-    canvasContext.canvas.renderAll();
-    prop.target.value = '';
   }
 
   const toJSON = () => {
-    // console.log(JSON.stringify(canvasContext.canvas.toJSON(['width', 'height'])))
     console.log(canvasContext.canvas.toJSON(['width', 'height']))
   }
 
   const toJSON2 = () => {
-    // console.log(JSON.stringify(canvasContext.canvas.toJSON(['width', 'height'])))
-    console.log(canvasContext.canvas2.toJSON(['width', 'height']))
+
+    const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
+    canvasTimes(canvasObject, 10)
+    console.log(JSON.stringify(canvasObject))
+
+    const a = document.createElement('a')
+
+    const blob = new Blob([JSON.stringify(canvasObject)])
+    a.href = URL.createObjectURL(blob)
+    a.download = `save.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
 
 
   const rePos = () => {
-    // canvasContext.canvas.setZoom(1)
-    //
-    // canvasContext.canvas.discardActiveObject();
-    // const delta = new fabric.Point(0, 0);
-    // canvasContext.canvas.relativePan(delta)
     canvasContext.canvas.setViewportTransform([1,0,0,1,0,0]);
   }
 
-  const loadJSON = () => {
+  const loadJSON = (hasPattern) => {
     const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
-    // const canvasJSON = JSON.stringify(canvasObject)
-    canvasTimes(canvasObject)
+    canvasTimes(canvasObject, 10)
+    console.log(canvasObject)
     canvasContext.canvas2.loadFromJSON(canvasObject,() => {
       canvasContext.canvas2.setWidth(canvasObject.width)
       canvasContext.canvas2.setHeight(canvasObject.height)
+      if (!hasPattern) {
+        canvasContext.canvas2.setOverlayImage(null)
+      }
+      canvasContext.canvas2.renderAll()
     })
-    canvasContext.canvas2.renderAll()
-    // canvasContext.json = JSON.stringify(canvasContext.canvas.toJSON())
+
   }
 
-  const canvasTimes = (canvasObj) => {
-    canvasObj.height = canvasObj.height * 10
-    canvasObj.width = canvasObj.width * 10
+  const canvasTimes = (canvasObj, times) => {
+    canvasObj.height = canvasObj.height * times
+    canvasObj.width = canvasObj.width * times
     if (canvasObj.backgroundImage) {
-      canvasObj.backgroundImage.height = canvasObj.backgroundImage.height * 10
-      canvasObj.backgroundImage.width = canvasObj.backgroundImage.width * 10
+      canvasObj.backgroundImage.height = canvasObj.backgroundImage.height * times
+      canvasObj.backgroundImage.width = canvasObj.backgroundImage.width * times
+    }
+    if (canvasObj.overlayImage) {
+      canvasObj.overlayImage.scaleX = canvasObj.overlayImage.scaleX * times
+      canvasObj.overlayImage.scaleY = canvasObj.overlayImage.scaleY * times
     }
 
-    canvasObj.objects.map((item)=>objectTimes(item))
+    canvasObj.objects.map((item)=>objectTimes(item, times))
   }
 
-  const objectTimes = (obj) => {
+  const objectTimes = (obj, times) => {
     if (obj.type === 'image') {
-      obj.scaleX = obj.scaleX * 10
-      obj.scaleY = obj.scaleY * 10
-      obj.top = obj.top * 10
-      obj.left = obj.left * 10
+      obj.scaleX = obj.scaleX * times
+      obj.scaleY = obj.scaleY * times
+      obj.top = obj.top * times
+      obj.left = obj.left * times
     } else if (obj.type === 'group') {
-      obj.width = obj.width * 10
-      obj.height = obj.height * 10
-      obj.top = obj.top * 10
-      obj.left = obj.left * 10
-      obj.objects.map((item)=>objectTimes(item))
+      obj.width = obj.width * times
+      obj.height = obj.height * times
+      obj.top = obj.top * times
+      obj.left = obj.left * times
+      obj.objects.map((item)=>objectTimes(item, times))
     }
+  }
+
+
+  useEffect(()=> {
+    // setObjs(canvasContext.canvas.getObjects())
+    // console.log(11)
+    console.log('useEffect---')
+    console.log(objs)
+    console.log((canvasContext.canvas.getObjects()))
+    console.log('useEffect---end')
+  }, [objs])
+
+
+  const uploadJSON = (prop) => {
+    const file = prop.target.files[0];
+
+    if (window.FileReader) {
+      const reader = new FileReader()
+      reader.readAsText(file, "UTF-8")
+      reader.onloadend = (e) => {
+        const canvasObject = JSON.parse(e.target.result)
+        console.log(canvasObject)
+
+        canvasTimes(canvasObject, 0.1)
+        canvasContext.canvas.loadFromJSON(canvasObject, () => {
+          canvasContext.canvas.setWidth(canvasObject.width)
+          canvasContext.canvas.setHeight(canvasObject.height)
+
+          canvasContext.canvas.renderAll()
+          setObjs(canvasContext.canvas.getObjects())
+          console.log('setObjs')
+          console.log(canvasContext.canvas.getObjects())
+        })
+
+      }
+    }
+
+    prop.target.value = '';
+  }
+
+  const f5 = () => {
+    setObjs(canvasContext.canvas.getObjects())
   }
 
   return (
     <>
       <div>
         <div style={{float: "right"}}>
-          {
-            objs?.reverse().map((item,index) => (
-                objectList(item, index)
-            ))
-          }
+        {/*  {*/}
+        {/*    objs?.reverse().map((item,index) => (*/}
+        {/*        objectList(item, index)*/}
+        {/*    ))*/}
+        {/*  }*/}
+          <Lii target={objs}/>
         </div>
+
         <h1>{num}</h1>
         <button id="btnNum" onClick={()=>setNum(num + 1)}>点击</button>
         <canvas id="canvas" ref={canvasEl} style={{width: 1500, height: 1500}} />
@@ -474,7 +521,8 @@ const App = () => {
         <button id="btna" onClick={()=>{console.log(objs)}}>log</button>
       </div>
       <div>
-        <button id="btn-save" onClick={save}>导出图片</button>
+        <button id="btn-save" onClick={()=>{save(false)}}>导出图片</button>
+        <button id="btn-save" onClick={()=>{save(true)}}>导出无版型图片</button>
         <button id="btn-save" onClick={toJSON}>JSON</button>
       </div>
       <div>
@@ -482,9 +530,17 @@ const App = () => {
         {/*<input type="file" id="upload" onChange={upload}/>*/}
         <button id="repos" onClick={rePos}>位置复原</button>
       </div>
-      <canvas id="canvas2" ref={canvasEl2} />
-      <button id="btn-save" onClick={loadJSON}>读取JSON</button>
+      <div style={{display: "none"}}>
+        <canvas id="canvas2" ref={canvasEl2} />
+      </div>
+
+      {/*<button id="btn-save" onClick={loadJSON}>读取JSON</button>*/}
       <button id="btn-save" onClick={toJSON2}>JSON</button>
+      <input type="file" id="uploadJSON" onChange={uploadJSON}/>读取JSON文件并赋值到小canvas
+
+
+      <button id="btn-save" onClick={f5}>刷新图层列表</button>
+      <button id="btna" onClick={()=>{console.log(canvasContext.canvas.toObject())}}>log2</button>
     </>
   )
 }
