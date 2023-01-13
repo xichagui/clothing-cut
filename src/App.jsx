@@ -1,6 +1,6 @@
 import LZQ from './LZQ8002.png'
 import './App.css'
-import React, {useEffect, useRef, useState, createContext, useContext} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import { fabric } from 'fabric';
 
 const canvasContext = {'canvas': null, 'panning': false, 'canvas2': null, 'json': null }
@@ -88,9 +88,9 @@ const App = () => {
     }
   }, []);
 
-  const initCanvas = () => (
-    new fabric.Canvas('canvas', options)
-  )
+  // const initCanvas = () => (
+  //   new fabric.Canvas('canvas', options)
+  // )
 
   const click = () => {
     fabric.Image.fromURL(LZQ, (oImg) => {
@@ -108,7 +108,7 @@ const App = () => {
   const upload = (prop) => {
     console.log(prop)
     // const filePath = prop.target.value
-    const fileName = prop.target.files[0].name
+    // const fileName = prop.target.files[0].name
     const file = prop.target.files[0]
     // const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
 
@@ -129,28 +129,28 @@ const App = () => {
     prop.target.value = '';
   }
 
-  const upload2 = (prop) => {
-    console.log(prop)
-    const objectURL = URL.createObjectURL(prop.target.files[0]);
-
-    const reader = new FileReader();
-    // reader.onload
-
-    const img = new Image();
-    img.src = objectURL;
-    img.onload = () => {
-      console.log(img.width, img.height)
-    }
-
-    fabric.Image.fromURL(objectURL, (oImg) => {
-      // oImg.scale(0.05);
-      canvasContext.canvas.add(oImg);
-      console.log(canvasContext.canvas.getObjects())
-      setObjs(()=>{return canvasContext.canvas.getObjects()})
-    });
-
-    prop.target.value = '';
-  }
+  // const upload2 = (prop) => {
+  //   console.log(prop)
+  //   const objectURL = URL.createObjectURL(prop.target.files[0]);
+  //
+  //   const reader = new FileReader();
+  //   // reader.onload
+  //
+  //   const img = new Image();
+  //   img.src = objectURL;
+  //   img.onload = () => {
+  //     console.log(img.width, img.height)
+  //   }
+  //
+  //   fabric.Image.fromURL(objectURL, (oImg) => {
+  //     // oImg.scale(0.05);
+  //     canvasContext.canvas.add(oImg);
+  //     console.log(canvasContext.canvas.getObjects())
+  //     setObjs(()=>{return canvasContext.canvas.getObjects()})
+  //   });
+  //
+  //   prop.target.value = '';
+  // }
 
   const z_index_change = (option) => {
     let activeObj = canvasContext.canvas.getActiveObject();
@@ -181,6 +181,7 @@ const App = () => {
     canvasContext.canvas.setOverlayImage(objectURL, canvasContext.canvas.renderAll.bind(canvasContext.canvas),{scaleX: 0.05, scaleY:0.05});
     canvasContext.canvas.renderAll();
   }
+
 
   const outputData = () => {
     console.log('output---')
@@ -274,9 +275,9 @@ const App = () => {
     // return ()=>{canvasContext.canvas.on({})}
   }, [])
 
-  const zoom = (delta) => {
-    // canvasContext.canvas.setZoom(delta)
-  }
+  // const zoom = (delta) => {
+  //   // canvasContext.canvas.setZoom(delta)
+  // }
 
   const pan = () => {
     canvasContext.canvas.discardActiveObject();
@@ -340,10 +341,10 @@ const App = () => {
     const img = new Image();
     img.src = objectURL;
 
-    const filePath = prop.target.value
-    const fileName = prop.target.files[0].name
+    // const filePath = prop.target.value
+    // const fileName = prop.target.files[0].name
     const file = prop.target.files[0]
-    const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
+    // const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
 
     if (window.FileReader) {
       const reader = new FileReader()
@@ -371,6 +372,126 @@ const App = () => {
       }
     }
 
+  }
+
+  // 读取新版型并按宽度缩放原图
+  const uploadNewPattern = (prop) => {
+    console.log(prop)
+    const objectURL = URL.createObjectURL(prop.target.files[0]);
+    const img = new Image();
+    img.src = objectURL;
+
+    const file = prop.target.files[0]
+
+    if (window.FileReader) {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = (e) => {
+        const base64String = e.target.result
+        fabric.Image.fromURL(base64String, (oImg) => {
+          canvasContext.canvas.discardActiveObject();
+
+          const scaleX = (oImg.width/10) / canvasContext.canvas.width
+          // const scaleY = (oImg.height/10) / canvasContext.canvas.height
+          // 以宽度为默认花纹缩放比例
+          const scaleY = (oImg.width/10) / canvasContext.canvas.width
+
+          if (canvasContext.canvas.getObjects()) {
+            const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+              canvas: canvasContext.canvas,
+            });
+            canvasContext.canvas.setActiveObject(sel);
+            canvasContext.canvas.getActiveObject().toGroup();
+            canvasContext.canvas.discardActiveObject();
+
+            const group = canvasContext.canvas.getObjects()[0]
+            group.top = group.top * scaleY
+            group.left = group.left * scaleX
+            group.scaleX = scaleX
+            group.scaleY = scaleY
+          }
+
+          canvasContext.canvas.setWidth(oImg.width/10)
+          canvasContext.canvas.setHeight(oImg.height/10)
+
+          const bg = new fabric.Rect({ width: oImg.width/10, height: oImg.height/10, fill: 'white', evented: false, selectable: false });
+          bg.canvas = canvasContext.canvas;
+          canvasContext.canvas.backgroundImage = bg;
+
+          canvasContext.canvas.setOverlayImage(oImg, canvasContext.canvas.renderAll.bind(canvasContext.canvas), {scaleX: 0.1, scaleY:0.1});
+
+         // if (canvasContext.canvas.getObjects()) {
+         //    const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+         //      canvas: canvasContext.canvas,
+         //    });
+         //    canvasContext.canvas.setActiveObject(sel);
+         //    canvasContext.canvas.getActiveObject().toActiveSelection();
+         //
+         //    canvasContext.canvas.discardActiveObject();
+         //  }
+
+          setObjs(()=>{return canvasContext.canvas.getObjects()})
+          canvasContext.canvas.renderAll();
+        });
+      }
+    }
+  }
+
+  // 读取新版型并居中延伸
+  const uploadNewPattern2 = (prop) => {
+    console.log(prop)
+    const objectURL = URL.createObjectURL(prop.target.files[0]);
+    const img = new Image();
+    img.src = objectURL;
+
+    const file = prop.target.files[0]
+
+    if (window.FileReader) {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onloadend = (e) => {
+        const base64String = e.target.result
+        fabric.Image.fromURL(base64String, (oImg) => {
+          canvasContext.canvas.discardActiveObject();
+
+          const objects = {"obj": null}
+          if (canvasContext.canvas.getObjects()) {
+            const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+              canvas: canvasContext.canvas,
+            });
+            canvasContext.canvas.setActiveObject(sel);
+            canvasContext.canvas.getActiveObject().toGroup();
+            canvasContext.canvas.discardActiveObject();
+
+            objects.obj = canvasContext.canvas.getObjects()[0]
+            objects.obj.left = oImg.width/10/2 - (objects.obj.width-objects.obj.left)/2
+            objects.obj.top = oImg.height/10/2 - (objects.obj.height-objects.obj.top)/2
+          }
+
+          canvasContext.canvas.setWidth(oImg.width/10)
+          canvasContext.canvas.setHeight(oImg.height/10)
+
+          const bg = new fabric.Rect({ width: oImg.width/10, height: oImg.height/10, fill: 'white', evented: false, selectable: false });
+          bg.canvas = canvasContext.canvas;
+          canvasContext.canvas.backgroundImage = bg;
+
+          canvasContext.canvas.setOverlayImage(oImg, canvasContext.canvas.renderAll.bind(canvasContext.canvas), {scaleX: 0.1, scaleY:0.1});
+
+          // if (canvasContext.canvas.getObjects()) {
+          //    const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+          //      canvas: canvasContext.canvas,
+          //    });
+          //    canvasContext.canvas.setActiveObject(sel);
+          //    canvasContext.canvas.getActiveObject().toActiveSelection();
+          //
+          //    canvasContext.canvas.discardActiveObject();
+          //  }
+
+          setObjs(()=>{return canvasContext.canvas.getObjects()})
+          canvasContext.canvas.renderAll();
+        });
+      }
+    }
   }
 
   const toJSON = () => {
@@ -481,8 +602,23 @@ const App = () => {
     prop.target.value = '';
   }
 
-  const f5 = () => {
-    setObjs(canvasContext.canvas.getObjects())
+
+  const selectAllObjects = () => {
+    canvasContext.canvas.discardActiveObject();
+    var sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+      canvas: canvasContext.canvas,
+    });
+    canvasContext.canvas.setActiveObject(sel);
+    canvasContext.canvas.requestRenderAll();
+  }
+
+  const groupAll = () => {
+    canvasContext.canvas.discardActiveObject();
+    const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+      canvas: canvasContext.canvas,
+    });
+    canvasContext.canvas.setActiveObject(sel).toGroup();
+    canvasContext.canvas.requestRenderAll();
   }
 
   return (
@@ -519,6 +655,8 @@ const App = () => {
         <button id="btn-pan" onClick={group}>合并对象</button>
         <button id="btn-pan" onClick={ungroup}>拆开对象</button>
         <button id="btna" onClick={()=>{console.log(objs)}}>log</button>
+        <button id="btn-pan" onClick={selectAllObjects}>选择所有对象</button>
+
       </div>
       <div>
         <button id="btn-save" onClick={()=>{save(false)}}>导出图片</button>
@@ -539,8 +677,14 @@ const App = () => {
       <input type="file" id="uploadJSON" onChange={uploadJSON}/>读取JSON文件并赋值到小canvas
 
 
-      <button id="btn-save" onClick={f5}>刷新图层列表</button>
+      <button id="btn-f5" onClick={groupAll}>合并</button>
       <button id="btna" onClick={()=>{console.log(canvasContext.canvas.toObject())}}>log2</button>
+      <div>
+        <input type="file" id="uploadNewPattern" onChange={uploadNewPattern}/> 读取新版型
+      </div>
+      <div>
+        <input type="file" id="uploadNewPattern2" onChange={uploadNewPattern2}/> 读取新版型
+      </div>
     </>
   )
 }
