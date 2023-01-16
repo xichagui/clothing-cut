@@ -1,5 +1,5 @@
 #root {
-  max-width: 1280px;
+  /*max-width: 1280px;*/
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
@@ -46,4 +46,8 @@
 
 #canvas2 {
   border: 1px solid #ccc;
+}
+
+.canvas-container {
+  margin-left: 180px;
 }
