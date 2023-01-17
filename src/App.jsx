@@ -1,7 +1,7 @@
 import './App.css'
 import React, {useEffect, useRef, useState} from 'react';
 import {fabric} from 'fabric';
-import {Button, Space, Switch, Upload} from 'antd'
+import {Button, Modal, Space, Spin, Switch, Upload} from 'antd'
 import {
   CaretDownOutlined,
   CaretUpOutlined, CopyOutlined,
@@ -136,7 +136,7 @@ const App = () => {
     // const file = prop.target.files[0]
     const file = prop.file
     // const extn = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase()
-
+    showModal()
     if (window.FileReader) {
       const reader = new FileReader()
       reader.readAsDataURL(file)
@@ -149,6 +149,7 @@ const App = () => {
           setObjs(() => {
             return canvasContext.canvas.getObjects()
           })
+          closeModal()
         });
       }
     }
@@ -360,29 +361,80 @@ const App = () => {
     canvasContext.canvas.requestRenderAll();
   }
 
-
+  let isSaving = false
   const save = (hasPattern) => {
-
+    if (isSaving) {
+      return
+    } else {
+      isSaving = true
+    }
+    // showModal()
     rePos()
-    loadJSON(hasPattern)
 
-    const url = canvasContext.canvas2.toDataURL({
-      format: "jpeg",
-      quality: 1
+    const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
+    canvasTimes(canvasObject, 10)
+    // closeModal()
+    // console.log(JSON.stringify(canvasObject))
+    // console.log(canvasObject)
+
+    canvasContext.canvas2.loadFromJSON(canvasObject, () => {
+      canvasContext.canvas2.setWidth(canvasObject.width)
+      canvasContext.canvas2.setHeight(canvasObject.height)
+      // console.log(hasPattern, !hasPattern)
+      if (hasPattern) {
+        canvasContext.canvas2.setOverlayImage(null)
+      }
+      canvasContext.canvas2.renderAll()
+
+      const url = canvasContext.canvas2.toDataURL({
+        format: "jpeg",
+        quality: 1
+      })
+
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `image.jpg`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      console.log("loaded")
+      // closeModal()
+      isSaving = false
     })
-    // e.download(url);
-    // console.log(url)
-    // this.download(url)
 
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `image.jpg`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
   }
 
+  // const createCanvas2 = async (hasPattern) => {
+  //   const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
+  //   canvasTimes(canvasObject, 10)
+  //   console.log(canvasObject)
+  //   canvasContext.canvas2.loadFromJSON(canvasObject, () => {
+  //     canvasContext.canvas2.setWidth(canvasObject.width)
+  //     canvasContext.canvas2.setHeight(canvasObject.height)
+  //     // console.log(hasPattern, !hasPattern)
+  //     if (!hasPattern) {
+  //       canvasContext.canvas2.setOverlayImage(null)
+  //     }
+  //     canvasContext.canvas2.renderAll()
+  //
+  //     // const url = canvasContext.canvas2.toDataURL({
+  //     //   format: "jpeg",
+  //     //   quality: 1
+  //     // })
+  //
+  //     // const a = document.createElement('a')
+  //     // a.href = url
+  //     // a.download = `image.jpg`
+  //     // document.body.appendChild(a)
+  //     // a.click()
+  //     // document.body.removeChild(a)
+  //     // console.log("loaded")
+  //     closeModal()
+  //   })
+  // }
+
   const newCanvasFromUpload = (prop) => {
+    showModal()
     console.log(prop)
     // const objectURL = URL.createObjectURL(prop.target.files[0]);
     // const objectURL = URL.createObjectURL(prop.file);
@@ -428,6 +480,7 @@ const App = () => {
           canvasContext.canvas.renderAll();
 
           setMainStyle(null)
+          closeModal()
         });
       }
     }
@@ -436,6 +489,7 @@ const App = () => {
 
   // 读取新版型并按宽度缩放原图
   const uploadNewPattern = (prop) => {
+    showModal()
     console.log(prop)
     // const objectURL = URL.createObjectURL(prop.target.files[0]);
     // const img = new Image();
@@ -504,6 +558,7 @@ const App = () => {
             return canvasContext.canvas.getObjects()
           })
           canvasContext.canvas.renderAll();
+          closeModal()
         });
       }
     }
@@ -511,6 +566,7 @@ const App = () => {
 
   // 读取新版型并居中延伸
   const uploadNewPattern2 = (prop) => {
+    showModal()
     console.log(prop)
     // const objectURL = URL.createObjectURL(prop.target.files[0]);
     // const img = new Image();
@@ -574,6 +630,7 @@ const App = () => {
             return canvasContext.canvas.getObjects()
           })
           canvasContext.canvas.renderAll();
+          closeModal()
         });
       }
     }
@@ -584,10 +641,15 @@ const App = () => {
   }
 
   const toJSON2 = () => {
-
+    if (isSaving) {
+      return
+    } else {
+      isSaving = true
+    }
+    // showModal()
     const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
     canvasTimes(canvasObject, 10)
-    console.log(JSON.stringify(canvasObject))
+    // console.log(JSON.stringify(canvasObject))
 
     const a = document.createElement('a')
 
@@ -597,6 +659,8 @@ const App = () => {
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
+    // closeModal()
+    isSaving = false
   }
 
 
@@ -605,17 +669,6 @@ const App = () => {
   }
 
   const loadJSON = (hasPattern) => {
-    const canvasObject = canvasContext.canvas.toJSON(['width', 'height'])
-    canvasTimes(canvasObject, 10)
-    console.log(canvasObject)
-    canvasContext.canvas2.loadFromJSON(canvasObject, () => {
-      canvasContext.canvas2.setWidth(canvasObject.width)
-      canvasContext.canvas2.setHeight(canvasObject.height)
-      if (!hasPattern) {
-        canvasContext.canvas2.setOverlayImage(null)
-      }
-      canvasContext.canvas2.renderAll()
-    })
 
   }
 
@@ -662,6 +715,7 @@ const App = () => {
 
   const uploadJSON = (prop) => {
     // const file = prop.target.files[0];
+    showModal()
     const file = prop.file;
 
     if (window.FileReader) {
@@ -682,6 +736,7 @@ const App = () => {
           console.log(canvasContext.canvas.getObjects())
         })
         setMainStyle(null)
+        closeModal()
       }
     }
 
@@ -713,6 +768,16 @@ const App = () => {
     canvasContext.canvas.requestRenderAll();
   }
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(()=>true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(()=>false);
+  };
+
   return (
     <>
       <Space wrap id="hello">
@@ -725,6 +790,9 @@ const App = () => {
           <Button size="large">导入JSON存档文件</Button>
         </Upload>
       </Space>
+      <Modal title="Loading" open={isModalOpen} footer={null} closable={false} style={{textAlign: "center"}}>
+        <Spin />
+      </Modal>
       <div id="main" style={{...mainStyle}}>
         <Space wrap style={{padding: "10px"}}>
 
