@@ -512,7 +512,7 @@ const App = () => {
           const scaleY = (oImg.width / 10) / canvasContext.canvas.width
 
           if (canvasContext.canvas.getObjects()) {
-            const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+            let sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
               canvas: canvasContext.canvas,
             });
             canvasContext.canvas.setActiveObject(sel);
@@ -524,6 +524,14 @@ const App = () => {
             group.left = group.left * scaleX
             group.scaleX = scaleX
             group.scaleY = scaleY
+
+            group.toActiveSelection()
+
+            // sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+            //   canvas: canvasContext.canvas,
+            // });
+            // canvasContext.canvas.setActiveObject(sel);
+            // canvasContext.canvas.getActiveObject().
           }
 
           canvasContext.canvas.setWidth(oImg.width / 10)
@@ -596,6 +604,8 @@ const App = () => {
             objects.obj = canvasContext.canvas.getObjects()[0]
             objects.obj.left = oImg.width / 10 / 2 - (objects.obj.width - objects.obj.left) / 2
             objects.obj.top = oImg.height / 10 / 2 - (objects.obj.height - objects.obj.top) / 2
+
+            objects.obj.toActiveSelection()
           }
 
           canvasContext.canvas.setWidth(oImg.width / 10)
@@ -731,7 +741,9 @@ const App = () => {
           canvasContext.canvas.setHeight(canvasObject.height)
 
           canvasContext.canvas.renderAll()
-          setObjs(canvasContext.canvas.getObjects())
+          setObjs(() => {
+            return canvasContext.canvas.getObjects()
+          })
           console.log('setObjs')
           console.log(canvasContext.canvas.getObjects())
         })
@@ -746,7 +758,7 @@ const App = () => {
 
   const selectAllObjects = () => {
     canvasContext.canvas.discardActiveObject();
-    let sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
+    const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
       canvas: canvasContext.canvas,
     });
     canvasContext.canvas.setActiveObject(sel);
@@ -765,6 +777,9 @@ const App = () => {
   const del = () => {
     canvasContext.canvas.remove(canvasContext.canvas.getActiveObject());
     canvasContext.canvas.discardActiveObject();
+    setObjs(() => {
+      return canvasContext.canvas.getObjects()
+    })
     canvasContext.canvas.requestRenderAll();
   }
 
