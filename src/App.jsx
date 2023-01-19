@@ -305,6 +305,9 @@ const App = () => {
         'mouse:down': opt => {
           // this.panning = true;
           mouseDown = true
+          if (!canvasContext.panning) {
+            getElement(opt)
+          }
         },
         'mouse:up': opt => {
           mouseDown = false
@@ -767,6 +770,21 @@ const App = () => {
     canvasContext.canvas.requestRenderAll();
   }
 
+  const loopOnObjects = (e) => {
+    let mouse = canvasContext.canvas.getPointer(e.e, false);
+    let point = new fabric.Point(mouse.x, mouse.y)
+
+    let count = 0;
+    canvasContext.canvas.getObjects().forEach((object, index) => {
+      if (object.containsPoint(point)) {
+        count++;
+      }
+    });
+  }
+  const getElement = (e) => {
+    loopOnObjects(e);
+  }
+
   const groupAll = () => {
     canvasContext.canvas.discardActiveObject();
     const sel = new fabric.ActiveSelection(canvasContext.canvas.getObjects(), {
@@ -783,6 +801,10 @@ const App = () => {
       return canvasContext.canvas.getObjects()
     })
     canvasContext.canvas.requestRenderAll();
+  }
+
+  const checkSelect = () => {
+    console.log(canvasContext.canvas.getActiveObject())
   }
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -823,6 +845,8 @@ const App = () => {
             <Button type="primary">导入图片</Button>
           </Upload>
           <Button type="primary" danger onClick={del}>删除选中元素</Button>
+
+          <Button type="primary" danger onClick={checkSelect}>打印选中元素</Button>
           {/*<input type="file" id="upload2" onChange={upload_overlay}/>*/}
           {/*<button id="z-index-forward" onClick={() => z_index_change("FORWARD")}>图层提升</button>*/}
           {/*<button id="z-index-backward" onClick={() => z_index_change("BACKWARD")}>图层下降</button>*/}
