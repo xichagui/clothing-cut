@@ -181,9 +181,10 @@ const App = () => {
   // }
 
   const z_index_change = (option, objIndex) => {
-    if (objIndex) {
+    if (objIndex || objIndex === 0) {
       selectObj(objIndex)
     }
+    console.log('objIndex', objIndex)
 
     let activeObj = canvasContext.canvas.getActiveObject();
     try {
@@ -720,6 +721,7 @@ const App = () => {
     console.log(objs)
     console.log((canvasContext.canvas.getObjects()))
     console.log('useEffect---end')
+    canvasContext.canvas.renderAll()
   }, [objs])
 
 
@@ -786,22 +788,24 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const showModal = () => {
+    console.log('showModal')
     setIsModalOpen(()=>true);
   };
 
   const closeModal = () => {
+    console.log('closeModal')
     setIsModalOpen(()=>false);
   };
 
   return (
     <>
       <Space wrap id="hello">
-        <Upload customRequest={newCanvasFromUpload} showUploadList={false}>
+        <Upload customRequest={newCanvasFromUpload} showUploadList={false} accept="image/png, image/jpeg">
           <Button type="primary" size="large">导入排版新建画布</Button>
         </Upload>
 
 
-        <Upload customRequest={uploadJSON} showUploadList={false}>
+        <Upload customRequest={uploadJSON} showUploadList={false} accept=".json">
           <Button size="large">导入JSON存档文件</Button>
         </Upload>
       </Space>
