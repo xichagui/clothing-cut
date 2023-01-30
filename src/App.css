@@ -1,8 +1,8 @@
 #root {
   /*max-width: 1280px;*/
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  /*padding: 2rem;*/
+  /*text-align: center;*/
 }
 
 .logo {
@@ -50,4 +50,32 @@
 
 .canvas-container {
   margin-left: 180px;
+}
+
+#main {
+  min-height: calc(100vh - 64px);
+}
+
+#tuceng-header {
+  color: white;
+  background-color: #555555;
+  height: 53px;
+  min-height: 53px;
+  line-height: 53px;
+}
+
+#tools-header {
+  background-color: #e6e3cb;
+  height: 53px;
+  min-height: 53px;
+  line-height: 53px;
+  border-bottom: 3px #888888 solid;
+}
+
+#tools-header2 {
+  background-color: #dddddd;
+  height: 53px;
+  min-height: 53px;
+  line-height: 53px;
+  /*border-bottom: 3px #888888 solid;*/
 }
