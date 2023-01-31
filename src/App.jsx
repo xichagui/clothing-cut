@@ -1,7 +1,7 @@
 import './App.css'
 import React, {useEffect, useRef, useState} from 'react';
 import {fabric} from 'fabric';
-import {Button, Divider, Layout, Modal, Space, Spin, Switch, Upload} from 'antd'
+import {Button, Col, Divider, Layout, Modal, Row, Space, Spin, Switch, Upload} from 'antd'
 import {
     CaretDownOutlined,
     CaretUpOutlined, CopyOutlined,
@@ -10,7 +10,7 @@ import {
     VerticalAlignTopOutlined
 } from '@ant-design/icons'
 
-const { Header, Content, Sider } = Layout;
+const {Header, Content, Sider} = Layout;
 
 const canvasContext = {'canvas': null, 'panning': false, 'canvas2': null, 'json': null}
 
@@ -62,13 +62,14 @@ const App = () => {
     const objectList = (item, index, type = "one") => {
         let groupTag = null
         if (type === "group") {
-            groupTag = <div style={{marginLeft: 263, marginTop:13, backgroundColor: "white", width: 28}}>组合</div>
+            groupTag = <div style={{marginLeft: 263, marginTop: 13, backgroundColor: "white", width: 28}}>组合</div>
         }
 
         if (item._originalElement) {
             return (
 
-                <div style={{height: 140, width: 295, marginBottom: -2, ...objStyle[type]}} key={index} onClick={() => selectObj(index)}>
+                <div style={{height: 140, width: 295, marginBottom: -2, ...objStyle[type]}} key={index}
+                     onClick={() => selectObj(index)}>
                     <div style={{
                         width: 140,
                         height: 136,
@@ -96,8 +97,15 @@ const App = () => {
                             z_index_change("BACK", index);
                             e.stopPropagation()
                         }}/>
-                        <Button icon={<CopyOutlined/>} onClick={(e) => {copy(index); e.stopPropagation()}}/>
-                        <Button danger icon={<DeleteOutlined/>} onClick={(e) => {selectObj(index); del(); e.stopPropagation()}}/>
+                        <Button icon={<CopyOutlined/>} onClick={(e) => {
+                            copy(index);
+                            e.stopPropagation()
+                        }}/>
+                        <Button danger icon={<DeleteOutlined/>} onClick={(e) => {
+                            selectObj(index);
+                            del();
+                            e.stopPropagation()
+                        }}/>
                     </div>
                     {groupTag}
                 </div>
@@ -759,57 +767,71 @@ const App = () => {
 
     return (
         <Layout>
-            <Header style={{backgroundColor: "rgb(170 182 209)"}}>
-                <Space wrap id="hello">
-                    <Upload customRequest={newCanvasFromUpload} showUploadList={false} accept="image/png, image/jpeg">
-                        <Button type="primary" size="small">导入排版新建画布</Button>
-                    </Upload>
+            <Header style={{backgroundColor: "rgb(170 182 209)", position: "sticky", top: 0, zIndex: 1}}>
+                {/*<Space wrap id="hello">*/}
+                <Row>
+
+                    <Col span={9}>
+                        <Space wrap>
+                            <Upload customRequest={newCanvasFromUpload} showUploadList={false}
+                                    accept="image/png, image/jpeg">
+                                <Button type="primary" size="small">导入排版新建画布</Button>
+                            </Upload>
 
 
-                    <Upload customRequest={uploadJSON} showUploadList={false} accept=".json">
-                        <Button size="small">导入JSON存档文件</Button>
-                    </Upload>
+                            <Upload customRequest={uploadJSON} showUploadList={false} accept=".json">
+                                <Button size="small">导入JSON存档文件</Button>
+                            </Upload>
 
-                    <Button size="small" id="btn-save" onClick={toJSON2} type="primary" ghost icon={<SaveOutlined />}>保存为JSON存档文件</Button>
+                            <Button size="small" id="btn-save" onClick={toJSON2} type="primary" ghost
+                                    icon={<SaveOutlined/>}>保存为JSON存档文件</Button>
+                        </Space>
+                    </Col>
 
-                    <Divider type="vertical"/>
+                    <Col span={6} style={{textAlign: "center"}}>
+                        <Space wrap>
+                            <Button type="primary" size="small" ghost id="btn-save-with-pattern" onClick={() => {
+                                save(false)
+                            }} icon={<PictureOutlined/>}>导出带版型图片</Button>
+                            <Button type="primary" size="small" ghost id="btn-save-without-pattern" onClick={() => {
+                                save(true)
+                            }} icon={<PictureOutlined/>}>导出无版型图片</Button>
 
-                    <Space wrap style={{paddingLeft: 50}}>
-                        <Button type="primary" size="small" ghost id="btn-save-with-pattern" onClick={() => {
-                            save(false)
-                        }} icon={<PictureOutlined />}>导出带版型图片</Button>
-                        <Button type="primary" size="small" ghost id="btn-save-without-pattern" onClick={() => {
-                            save(true)
-                        }} icon={<PictureOutlined />}>导出无版型图片</Button>
+                        </Space>
+                    </Col>
 
-                    </Space>
 
-                    <Divider type="vertical"/>
+                    {/*<Divider type="vertical"/>*/}
 
-                    <Space wrap style={{paddingLeft: 50}}>
-                        <Upload customRequest={uploadNewPattern} showUploadList={false}>
-                            <Button size="small" shape="round" icon={<UploadOutlined />}>读取新版型图, 图样按宽度比例缩放</Button>
-                        </Upload>
-                        <Upload customRequest={uploadNewPattern2} showUploadList={false}>
-                            <Button size="small" shape="round" icon={<UploadOutlined />}>读取新版型图，图样花纹居中</Button>
-                        </Upload>
-                    </Space>
+                    <Col span={9} style={{textAlign: "right"}}>
+                        <Space wrap>
+                            <Upload customRequest={uploadNewPattern} showUploadList={false}>
+                                <Button size="small" shape="round" icon={<UploadOutlined/>}>读取新版型图, 宽度比例缩放</Button>
+                            </Upload>
+                            <Upload customRequest={uploadNewPattern2} showUploadList={false}>
+                                <Button size="small" shape="round" icon={<UploadOutlined/>}>读取新版型图，花纹居中</Button>
+                            </Upload>
+                        </Space>
+                    </Col>
+                </Row>
 
-                </Space>
+                {/*</Space>*/}
 
             </Header>
             <Layout>
-                <Sider trigger={null} width={300} style={{backgroundColor: "#aaaaaa", border: "5px #888888 solid", borderRight: "0"}}>
+                <Sider trigger={null} width={300}
+                       style={{backgroundColor: "#aaaaaa", border: "5px #888888 solid", borderRight: "0"}}>
                     <Header id="tuceng-header">图层列表</Header>
-                    <div style={{float: "left"}}>
+                    <div style={{float: "left", overflowY: "auto", height: "calc(100vh - 128px)"}}>
                         <Lii target={objs}/>
                     </div>
                 </Sider>
                 <Layout style={{border: "5px #888888 solid"}}>
-                    <Modal title="Loading" open={isModalOpen} footer={null} closable={false} style={{textAlign: "center"}}>
+                    <Modal title="Loading" open={isModalOpen} footer={null} closable={false}
+                           style={{textAlign: "center"}}>
                         <Spin/>
                     </Modal>
-                    <div id="main" style={{}}>
+                    <div id="main">
                         <Header id="tools-header">
                             <Space wrap>
                                 <Upload customRequest={upload} showUploadList={false}>
@@ -821,7 +843,7 @@ const App = () => {
                                 <Button size="small" id="btn-select-all" onClick={selectAllObjects}>选择所有</Button>
                                 <Button size="small" id="btn-select-off" onClick={selectOff}>取消选中</Button>
 
-                                <Button size="small" danger onClick={del} icon={<DeleteOutlined />}> 删除选中</Button>
+                                <Button size="small" danger onClick={del} icon={<DeleteOutlined/>}> 删除选中</Button>
                             </Space>
                         </Header>
 
@@ -831,7 +853,7 @@ const App = () => {
                                 <Button id="repos" size="small" onClick={rePos}>位置复原</Button>
                             </Space>
                         </Header>
-                        <div style={{paddingTop: "5px"}}>
+                        <div style={{paddingTop: "5px", overflow:"auto", height:"calc(100vh - 180px)", width:"calc(100vw - 310px)"}}>
                             {/*<div style={{float: "left"}}>*/}
                             {/*    <Lii target={objs}/>*/}
                             {/*</div>*/}
@@ -843,7 +865,6 @@ const App = () => {
                     </div>
                 </Layout>
             </Layout>
-
 
 
         </Layout>

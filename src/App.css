@@ -49,11 +49,11 @@
 }
 
 .canvas-container {
-  margin-left: 180px;
+  margin-left: 50px;
 }
 
 #main {
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 74px);
 }
 
 #tuceng-header {
@@ -70,6 +70,10 @@
   min-height: 53px;
   line-height: 53px;
   border-bottom: 3px #888888 solid;
+  /*position: sticky;*/
+  /*top: 67px;*/
+  /*z-index: 1;*/
+  /*position: "sticky", top: 0, zIndex: 1*/
 }
 
 #tools-header2 {
@@ -77,5 +81,8 @@
   height: 53px;
   min-height: 53px;
   line-height: 53px;
+  /*position: sticky;*/
+  /*top: 100px;*/
+  /*z-index: 1;*/
   /*border-bottom: 3px #888888 solid;*/
 }
