@@ -805,10 +805,10 @@ const App = () => {
 
                     <Col span={9} style={{textAlign: "right"}}>
                         <Space wrap>
-                            <Upload customRequest={uploadNewPattern} showUploadList={false}>
+                            <Upload customRequest={uploadNewPattern} showUploadList={false} accept="image/png, image/jpeg">
                                 <Button size="small" shape="round" icon={<UploadOutlined/>}>读取新版型图, 宽度比例缩放</Button>
                             </Upload>
-                            <Upload customRequest={uploadNewPattern2} showUploadList={false}>
+                            <Upload customRequest={uploadNewPattern2} showUploadList={false} accept="image/png, image/jpeg">
                                 <Button size="small" shape="round" icon={<UploadOutlined/>}>读取新版型图，花纹居中</Button>
                             </Upload>
                         </Space>
